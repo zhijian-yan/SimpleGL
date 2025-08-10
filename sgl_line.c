@@ -137,11 +137,8 @@ void sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
 }
 
 void sgl_draw_line(sgl_t *sgl, int x0, int y0, int x1, int y1, uint32_t color) {
-    int i;
-    int distance;
-    int err_x = 0, err_y = 0;
-    int inc_x = 1, inc_y = 1;
-    int x = x0, y = y0;
+    int x, y;
+    int sx = 1, sy = 1;
     int dx = x1 - x0;
     int dy = y1 - y0;
     if (dx == 0) {
@@ -154,24 +151,32 @@ void sgl_draw_line(sgl_t *sgl, int x0, int y0, int x1, int y1, uint32_t color) {
     }
     if (dx < 0) {
         dx = -dx;
-        inc_x = -1;
+        sx = -1;
     }
     if (dy < 0) {
         dy = -dy;
-        inc_y = -1;
+        sy = -1;
     }
-    distance = dx > dy ? dx : dy;
-    for (i = 0; i <= distance; ++i) {
-        err_x += dx;
-        err_y += dy;
-        if (err_x > distance) {
-            err_x -= distance;
-            x += inc_x;
+    if (dx > dy) {
+        int err = dx >> 1;
+        for (x = x0, y = y0; x != x1; x += sx) {
+            sgl_draw_point(sgl, x, y, color);
+            err -= dy;
+            if (err < 0) {
+                y += sy;
+                err += dx;
+            }
         }
-        if (err_y > distance) {
-            err_y -= distance;
-            y += inc_y;
+    } else {
+        int err = dy >> 1;
+        for (x = x0, y = y0; y != y1; y += sy) {
+            sgl_draw_point(sgl, x, y, color);
+            err -= dx;
+            if (err < 0) {
+                x += sx;
+                err += dy;
+            }
         }
-        sgl_draw_point(sgl, x, y, color);
     }
+    sgl_draw_point(sgl, x1, y1, color);
 }
