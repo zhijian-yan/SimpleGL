@@ -129,7 +129,7 @@ typedef struct sgl_t {
     void (*flush)(void *buffer, uint32_t buffer_size); // 发送数据回调函数
     void (*frame_start_cb)(void);                      // 帧起始回调函数
     void (*frame_end_cb)(void);                        // 帧结束回调函数
-    void (*draw_piexl)(struct sgl_t *sgl,              // 绘制像素函数指针
+    void (*draw_pixel)(struct sgl_t *sgl,              // 绘制像素函数指针
                        int x, int y, uint32_t color);
 } sgl_t;
 
@@ -142,7 +142,7 @@ void sgl_set_draw(sgl_t *sgl, void (*draw)(struct sgl_t *));
 void sgl_set_flush(sgl_t *sgl, void (*flush)(void *buffer, uint32_t size));
 // 设置函数
 void sgl_set_buffer(sgl_t *sgl, void *buffer);
-void sgl_set_draw_piexl(sgl_t *sgl, void (*draw_piexl)(sgl_t *sgl, int x, int y,
+void sgl_set_draw_pixel(sgl_t *sgl, void (*draw_pixel)(sgl_t *sgl, int x, int y,
                                                        uint32_t color));
 void sgl_set_frame_start_cb(sgl_t *sgl, void (*frame_start_cb)(void));
 void sgl_set_frame_end_cb(sgl_t *sgl, void (*frame_end_cb)(void));

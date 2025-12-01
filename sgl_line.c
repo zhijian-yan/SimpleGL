@@ -6,90 +6,52 @@ static void sgl_draw_original_hline(sgl_t *sgl, int x, int y, int len,
                                     uint32_t color) {
     int i;
     int x1 = x + len;
-    if (len > 0)
-        for (i = x; i < x1; ++i)
-            sgl->draw_piexl(sgl, i, y, color);
-    else if (len < 0)
-        for (i = x; i > x1; --i)
-            sgl->draw_piexl(sgl, i, y, color);
+    int step = (len > 0) ? 1 : -1;
+    for (i = x; i != x1; i += step)
+        sgl->draw_pixel(sgl, i, y, color);
 }
 
 static void sgl_draw_original_vline(sgl_t *sgl, int x, int y, int len,
                                     uint32_t color) {
     int i;
     int y1 = y + len;
-    if (len > 0)
-        for (i = y; i < y1; ++i)
-            sgl->draw_piexl(sgl, x, i, color);
-    else if (len < 0)
-        for (i = y; i > y1; --i)
-            sgl->draw_piexl(sgl, x, i, color);
+    int step = (len > 0) ? 1 : -1;
+    for (i = y; i != y1; i += step)
+        sgl->draw_pixel(sgl, x, i, color);
 }
 
-static int sgl_clip_hline(int *x, int *y, int *len, sgl_rect_t visible) {
-    int x_end;
-    if (*y < visible.top || *y > visible.bottom)
-        return -1;
+static int sgl_clip_line(int *start, int *len, int min, int max) {
+    int end;
     if (*len > 0) {
-        if (*x > visible.right)
+        if (*start > max)
             return -1;
-        x_end = *x + *len - 1;
-        if (x_end < visible.left)
+        end = *start + *len - 1;
+        if (end < min)
             return -1;
-        if (*x < visible.left)
-            *x = visible.left;
-        if (x_end > visible.right)
-            x_end = visible.right;
-        *len = x_end - *x + 1;
+        if (*start < min)
+            *start = min;
+        if (end > max)
+            end = max;
+        *len = end - *start + 1;
     } else if (*len < 0) {
-        if (*x < visible.left)
+        if (*start < min)
             return -1;
-        x_end = *x + *len + 1;
-        if (x_end > visible.right)
+        end = *start + *len + 1;
+        if (end > max)
             return -1;
-        if (x_end < visible.left)
-            x_end = visible.left;
-        if (*x > visible.right)
-            *x = visible.right;
-        *len = x_end - *x - 1;
-    }
-    return 0;
-}
-
-static int sgl_clip_vline(int *x, int *y, int *len, sgl_rect_t visible) {
-    int y_end;
-    if (*x < visible.left || *x > visible.right)
-        return -1;
-    if (*len > 0) {
-        if (*y > visible.bottom)
-            return -1;
-        y_end = *y + *len - 1;
-        if (y_end < visible.top)
-            return -1;
-        if (*y < visible.top)
-            *y = visible.top;
-        if (y_end > visible.bottom)
-            y_end = visible.bottom;
-        *len = y_end - *y + 1;
-    } else if (*len < 0) {
-        if (*y < visible.top)
-            return -1;
-        y_end = *y + *len + 1;
-        if (y_end > visible.bottom)
-            return -1;
-        if (y_end < visible.top)
-            y_end = visible.top;
-        if (*y > visible.bottom)
-            *y = visible.bottom;
-        *len = y_end - *y - 1;
+        if (end < min)
+            end = min;
+        if (*start > max)
+            *start = max;
+        *len = end - *start - 1;
     }
     return 0;
 }
 
 void sgl_draw_hline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
-    if (len == 0)
+    if (len == 0 || y < sgl->visible.top || y > sgl->visible.bottom)
         return;
-    if (sgl_clip_hline(&x, &y, &len, sgl->visible))
+    if (sgl_clip_line(&x, &len, sgl->visible.left, sgl->visible.right))
         return;
     if (sgl->rotate)
         sgl_rotated2original(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
@@ -112,9 +74,9 @@ void sgl_draw_hline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
 }
 
 void sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
-    if (len == 0)
+    if (len == 0 || x < sgl->visible.left || x > sgl->visible.right)
         return;
-    if (sgl_clip_vline(&x, &y, &len, sgl->visible))
+    if (sgl_clip_line(&y, &len, sgl->visible.top, sgl->visible.bottom))
         return;
     if (sgl->rotate)
         sgl_rotated2original(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);

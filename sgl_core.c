@@ -29,7 +29,7 @@ void sgl_init(sgl_t *sgl, void *buffer, uint32_t buffer_size, uint32_t page_num,
     sgl->rotate = SGL_ROTATE_0;
     sgl->frame_start_cb = NULL;
     sgl->frame_end_cb = NULL;
-    sgl->draw_piexl = sgl_draw_piexl_mono;
+    sgl->draw_pixel = sgl_draw_pixel_mono;
 }
 
 static void sgl_paint_start(sgl_t *sgl) {
@@ -86,9 +86,9 @@ void sgl_set_flush(sgl_t *sgl, void (*flush)(void *buffer, uint32_t size)) {
     sgl->flush = flush;
 }
 
-void sgl_set_draw_piexl(sgl_t *sgl, void (*draw_piexl)(sgl_t *sgl, int x, int y,
+void sgl_set_draw_pixel(sgl_t *sgl, void (*draw_pixel)(sgl_t *sgl, int x, int y,
                                                        uint32_t color)) {
-    sgl->draw_piexl = draw_piexl;
+    sgl->draw_pixel = draw_pixel;
 }
 
 void sgl_set_frame_start_cb(sgl_t *sgl, void (*frame_start_cb)(void)) {
