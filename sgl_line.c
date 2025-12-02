@@ -2,25 +2,7 @@
 #include "sgl_function.h"
 #include "sgl_point.h"
 
-static void sgl_draw_original_hline(sgl_t *sgl, int x, int y, int len,
-                                    uint32_t color) {
-    int i;
-    int x1 = x + len;
-    int step = (len > 0) ? 1 : -1;
-    for (i = x; i != x1; i += step)
-        sgl->draw_pixel(sgl, i, y, color);
-}
-
-static void sgl_draw_original_vline(sgl_t *sgl, int x, int y, int len,
-                                    uint32_t color) {
-    int i;
-    int y1 = y + len;
-    int step = (len > 0) ? 1 : -1;
-    for (i = y; i != y1; i += step)
-        sgl->draw_pixel(sgl, x, i, color);
-}
-
-static int sgl_clip_line(int *start, int *len, int min, int max) {
+static int __sgl_clip_line(int *start, int *len, int min, int max) {
     int end;
     if (*len > 0) {
         if (*start > max)
@@ -48,52 +30,62 @@ static int sgl_clip_line(int *start, int *len, int min, int max) {
     return 0;
 }
 
-void sgl_draw_hline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
+static void __sgl_draw_hline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
     if (len == 0 || y < sgl->visible.top || y > sgl->visible.bottom)
         return;
-    if (sgl_clip_line(&x, &len, sgl->visible.left, sgl->visible.right))
+    if (__sgl_clip_line(&x, &len, sgl->visible.left, sgl->visible.right))
         return;
-    if (sgl->rotate)
-        sgl_rotated2original(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
-    if (sgl->page_num > 1)
-        y -= sgl->page_start;
+    int x1 = x + len;
+    int step = (len > 0) ? 1 : -1;
+    for (int i = x; i != x1; i += step)
+        sgl->draw_pixel(sgl, i, y, color);
+}
+
+static void __sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
+    if (len == 0 || x < sgl->visible.left || x > sgl->visible.right)
+        return;
+    if (__sgl_clip_line(&y, &len, sgl->visible.top, sgl->visible.bottom))
+        return;
+    int y1 = y + len;
+    int step = (len > 0) ? 1 : -1;
+    for (int i = y; i != y1; i += step)
+        sgl->draw_pixel(sgl, x, i, color);
+}
+
+void sgl_draw_hline(sgl_t *sgl, int x, int y, int len, uint32_t color)
+{
+    sgl_rotate_point(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
     switch (sgl->rotate) {
     case SGL_ROTATE_0:
-        sgl_draw_original_hline(sgl, x, y, len, color);
+        __sgl_draw_hline(sgl, x, y, len, color);
         break;
     case SGL_ROTATE_90:
-        sgl_draw_original_vline(sgl, x, y, len, color);
+        __sgl_draw_vline(sgl, x, y, len, color);
         break;
     case SGL_ROTATE_180:
-        sgl_draw_original_hline(sgl, x, y, -len, color);
+        __sgl_draw_hline(sgl, x, y, -len, color);
         break;
     case SGL_ROTATE_270:
-        sgl_draw_original_vline(sgl, x, y, -len, color);
+        __sgl_draw_vline(sgl, x, y, -len, color);
         break;
     }
 }
 
-void sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color) {
-    if (len == 0 || x < sgl->visible.left || x > sgl->visible.right)
-        return;
-    if (sgl_clip_line(&y, &len, sgl->visible.top, sgl->visible.bottom))
-        return;
-    if (sgl->rotate)
-        sgl_rotated2original(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
-    if (sgl->page_num > 1)
-        y -= sgl->page_start;
+void sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color)
+{
+    gl_rotate_point(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
     switch (sgl->rotate) {
     case SGL_ROTATE_0:
-        sgl_draw_original_vline(sgl, x, y, len, color);
+        __sgl_draw_vline(sgl, x, y, len, color);
         break;
     case SGL_ROTATE_90:
-        sgl_draw_original_hline(sgl, x, y, -len, color);
+        __sgl_draw_hline(sgl, x, y, -len, color);
         break;
     case SGL_ROTATE_180:
-        sgl_draw_original_vline(sgl, x, y, -len, color);
+        __sgl_draw_vline(sgl, x, y, -len, color);
         break;
     case SGL_ROTATE_270:
-        sgl_draw_original_hline(sgl, x, y, len, color);
+        __sgl_draw_hline(sgl, x, y, len, color);
         break;
     }
 }

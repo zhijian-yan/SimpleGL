@@ -1,11 +1,33 @@
 #include "sgl_point.h"
 #include "sgl_function.h"
 
+void sgl_rotate_point(int *x, int *y, int max_x, int max_y,
+                                        sgl_rotate_t rotate)
+{
+    int temp = *x;
+    switch(rotate)
+    {
+        case SGL_ROTATE_0:
+        break;
+        case SGL_ROTATE_90:
+        *x = max_x - *y;
+        *y = temp;
+        break;
+        case SGL_ROTATE_180:
+        *x = max_x - *x;
+        *y = max_y - *y;
+        break;
+        case SGL_ROTATE_270:
+        *x = *y;
+        *y = max_y - temp;
+        break;
+    }
+}
+
 void sgl_draw_point(sgl_t *sgl, int x, int y, uint32_t color) {
     if (sgl_check_rect(x, y, x, y, sgl->visible))
         return;
-    if (sgl->rotate)
-        sgl_rotated2original(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
+    sgl_rotate_point(&x, &y, sgl->max_x, sgl->max_y, sgl->rotate);
     if (sgl->page_num > 1)
         y -= sgl->page_start;
     sgl->draw_pixel(sgl, x, y, color);
