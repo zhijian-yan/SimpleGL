@@ -91,18 +91,22 @@ void sgl_draw_vline(sgl_t *sgl, int x, int y, int len, uint32_t color)
 }
 
 void sgl_draw_line(sgl_t *sgl, int x0, int y0, int x1, int y1, uint32_t color) {
-    int x, y;
-    int sx = 1, sy = 1;
+    if (x0 == x1) {
+        sgl_draw_vline(sgl, x0, y0, y1 - y0, color);
+        return;
+    }
+    if (y0 == y1) {
+        sgl_draw_hline(sgl, x0, y0, x1 - x0, color);
+        return;
+    }
+    sgl_rotate_point(&x0, &y0, sgl->max_x, sgl->max_y, sgl->rotate);
+    sgl_rotate_point(&x1, &y1, sgl->max_x, sgl->max_y, sgl->rotate);
     int dx = x1 - x0;
     int dy = y1 - y0;
-    if (dx == 0) {
-        sgl_draw_original_vline(sgl, x0, y0, dy, color);
-        return;
-    }
-    if (dy == 0) {
-        sgl_draw_original_hline(sgl, x0, y0, dx, color);
-        return;
-    }
+    // __sgl_clip_line(&x0, &dy, sgl->visible.left, sgl->visible.right);
+    // __sgl_clip_line(&y0, &dx, sgl->visible.top, sgl->visible.bottom);
+    int x = x0, y = y0;
+    int sx = 1, sy = 1;
     if (dx < 0) {
         dx = -dx;
         sx = -1;
@@ -112,8 +116,7 @@ void sgl_draw_line(sgl_t *sgl, int x0, int y0, int x1, int y1, uint32_t color) {
         sy = -1;
     }
     if (dx > dy) {
-        int err = dx >> 1;
-        for (x = x0, y = y0; x != x1; x += sx) {
+        for (int err = dx >> 1; x != x1; x += sx) {
             sgl_draw_point(sgl, x, y, color);
             err -= dy;
             if (err < 0) {
@@ -122,8 +125,7 @@ void sgl_draw_line(sgl_t *sgl, int x0, int y0, int x1, int y1, uint32_t color) {
             }
         }
     } else {
-        int err = dy >> 1;
-        for (x = x0, y = y0; y != y1; y += sy) {
+        for (int err = dy >> 1; y != y1; y += sy) {
             sgl_draw_point(sgl, x, y, color);
             err -= dx;
             if (err < 0) {
